@@ -1,6 +1,5 @@
 "use client";
 
-import { use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -54,8 +53,8 @@ function formatDateTime(iso: string) {
   });
 }
 
-export default function OpsJobDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function OpsJobDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const router = useRouter();
   const job = getJob(id);
 
