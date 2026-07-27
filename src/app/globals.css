@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-jdr-cream text-jdr-navy;
+    min-height: 100dvh;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .jdr-card {
+    @apply bg-white rounded-xl shadow-jdr-sm border border-gray-100;
+  }
+
+  .jdr-btn-primary {
+    @apply bg-jdr-navy text-white font-semibold rounded-lg px-5 py-3 
+           hover:bg-jdr-navy-light active:scale-95 transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-jdr-gold focus:ring-offset-2;
+  }
+
+  .jdr-btn-gold {
+    @apply bg-jdr-gold text-jdr-navy font-semibold rounded-lg px-5 py-3 
+           hover:bg-jdr-gold-light active:scale-95 transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-jdr-gold focus:ring-offset-2;
+  }
+
+  .jdr-btn-ghost {
+    @apply text-jdr-navy font-medium rounded-lg px-4 py-2 
+           hover:bg-jdr-cream-dark active:scale-95 transition-all duration-150;
+  }
+
+  .jdr-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .jdr-input {
+    @apply w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-jdr-navy
+           placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-jdr-gold 
+           focus:border-jdr-gold transition-colors;
+  }
+
+  .jdr-label {
+    @apply block text-sm font-medium text-jdr-charcoal mb-1;
+  }
+
+  .stat-card {
+    @apply jdr-card p-4 flex flex-col gap-1;
+  }
+
+  .nav-tab {
+    @apply flex flex-col items-center gap-0.5 py-2 px-3 rounded-lg transition-colors text-xs font-medium;
+  }
+}
+
+/* Smooth scrolling */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
