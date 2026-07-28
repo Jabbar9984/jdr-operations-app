@@ -324,3 +324,136 @@ export interface JobWorkflowState {
   submitted: boolean;
   lastUpdated: string;
 }
+
+// ─── Audit Log ───────────────────────────────────────────────────────────────
+
+export type AuditEntityType =
+  | "approval"
+  | "job"
+  | "estimate"
+  | "pricing"
+  | "integration"
+  | "user";
+
+export type AuditAction =
+  | "created"
+  | "approved"
+  | "rejected"
+  | "returned_for_info"
+  | "edited"
+  | "status_changed"
+  | "submitted"
+  | "updated"
+  | "connected"
+  | "disconnected";
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  actorId: string;
+  actorName: string;
+  action: AuditAction;
+  entityType: AuditEntityType;
+  entityId: string;
+  entityLabel: string;
+  before?: string;
+  after?: string;
+  notes?: string;
+}
+
+// ─── Review Packet (tech findings for manager review) ────────────────────────
+
+export interface ReviewPacketPhoto {
+  id: string;
+  category: PhotoCategory;
+  caption: string;
+  timestamp: string;
+}
+
+export interface ReviewPacket {
+  approvalId: string;
+  jobId: string;
+  symptoms: {
+    customerComplaint: string;
+    observedSymptoms: string[];
+    errorCodes: string[];
+    frequencyOfIssue: string;
+    additionalNotes: string;
+  };
+  diagnostic: {
+    confirmedDiagnosis: string;
+    suspectedDiagnoses: { diagnosis: string; confidence: number; status: string }[];
+    completedTests: string[];
+    techNotes: string;
+  };
+  readings: {
+    component: string;
+    type: string;
+    expectedValue: string;
+    measuredValue: string;
+    unit: string;
+    result: "pass" | "fail" | "marginal";
+  }[];
+  photos: ReviewPacketPhoto[];
+  serviceReport: {
+    repairType: string;
+    workPerformed: string;
+    partsReplaced: string[];
+    laborMinutes: number;
+    outcome: string;
+    followUpRequired: boolean;
+    safetyConcerns?: string;
+  };
+  estimateLines: {
+    type: "labor" | "part";
+    description: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
+  estimateTotal: number;
+  proposedHcpChanges: {
+    field: string;
+    currentValue: string;
+    proposedValue: string;
+    reason: string;
+  }[];
+}
+
+// ─── Pricing Config ───────────────────────────────────────────────────────────
+
+export interface PricingConfig {
+  laborRatePerHour: number;
+  diagnosticFee: number;
+  travelFeeStandard: number;
+  travelFeePremium: number;
+  minimumServiceCharge: number;
+  afterHoursSurchargePercent: number;
+  tierMultipliers: {
+    standard: number;
+    premium: number;
+    vip: number;
+  };
+  taxRatePercent: number;
+  warrantyLaborRate: number;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+// ─── Integrations ─────────────────────────────────────────────────────────────
+
+export type IntegrationStatus = "connected" | "disconnected" | "pending" | "error";
+export type IntegrationCategory = "field_service" | "payments" | "ai" | "communications" | "warranty";
+
+export interface IntegrationConfig {
+  id: string;
+  name: string;
+  description: string;
+  category: IntegrationCategory;
+  status: IntegrationStatus;
+  logoInitials: string;
+  logoColor: string;
+  features: string[];
+  lastSynced?: string;
+  configFields: { key: string; label: string; placeholder: string; masked?: boolean }[];
+  notes?: string;
+}

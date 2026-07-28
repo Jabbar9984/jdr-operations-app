@@ -1,0 +1,1 @@
+- [JDR Phase 2 completion](jdr-phase2.md) — Phase 2 manager dashboard fully built; key architecture decisions and what was added.

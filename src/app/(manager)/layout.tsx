@@ -12,6 +12,9 @@ import {
   LogOut,
   Menu,
   X,
+  Package,
+  Shield,
+  ClipboardList,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { useState } from "react";
@@ -23,7 +26,10 @@ const NAV_ITEMS = [
   { href: "/ops/jobs", label: "Jobs", icon: Briefcase },
   { href: "/ops/approvals", label: "Approvals", icon: CheckSquare },
   { href: "/ops/technicians", label: "Technicians", icon: Users },
+  { href: "/ops/parts", label: "Parts Waiting", icon: Package },
+  { href: "/ops/warranty", label: "Warranty Claims", icon: Shield },
   { href: "/ops/reports", label: "Reports", icon: FileText },
+  { href: "/ops/audit", label: "Audit Log", icon: ClipboardList },
   { href: "/ops/settings", label: "Settings", icon: Settings },
 ];
 

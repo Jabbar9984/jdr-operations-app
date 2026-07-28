@@ -11,6 +11,10 @@ import type {
   MeterReadingTemplate,
   OEMPart,
   ServiceManual,
+  AuditLogEntry,
+  ReviewPacket,
+  PricingConfig,
+  IntegrationConfig,
 } from "@/types";
 
 // ─── Demo Accounts ────────────────────────────────────────────────────────────
@@ -562,3 +566,271 @@ export function searchParts(query: string): OEMPart[] {
 export function getManualsForAppliance(brand: string, model: string): ServiceManual[] {
   return SERVICE_MANUALS.filter(m => m.brand === brand && m.applicableModels.some(am => model.includes(am) || am.includes(model.split(" ")[0])));
 }
+
+// ─── Phase 2: Audit Log Seed Data ─────────────────────────────────────────────
+export const INITIAL_AUDIT_LOG: AuditLogEntry[] = [
+  { id: "al1", timestamp: "2026-07-26T17:30:00Z", actorId: "u2", actorName: "Sandra Kim", action: "approved", entityType: "approval", entityId: "ap4", entityLabel: "Warranty claim – Miele heating element", before: "pending", after: "approved", notes: "Approved. Submitted to Miele warranty portal." },
+  { id: "al2", timestamp: "2026-07-26T15:45:00Z", actorId: "u2", actorName: "Sandra Kim", action: "rejected", entityType: "approval", entityId: "ap5", entityLabel: "Part order – Sub-Zero wine cooler thermostat", before: "pending", after: "rejected", notes: "Incorrect part number. Re-submit with correct SKU." },
+  { id: "al3", timestamp: "2026-07-27T10:35:00Z", actorId: "u3", actorName: "Carlos Mendez", action: "submitted", entityType: "approval", entityId: "ap1", entityLabel: "Estimate – Sub-Zero PRO 48 evaporator fan motor", before: "draft", after: "pending" },
+  { id: "al4", timestamp: "2026-07-27T11:50:00Z", actorId: "u4", actorName: "Jasmine Patel", action: "submitted", entityType: "approval", entityId: "ap2", entityLabel: "Estimate – Miele G7966 heating element + inlet valve", before: "draft", after: "pending" },
+  { id: "al5", timestamp: "2026-07-27T08:20:00Z", actorId: "u6", actorName: "Alicia Fontaine", action: "submitted", entityType: "approval", entityId: "ap3", entityLabel: "Emergency part order – Gaggenau induction zone PCB", before: "draft", after: "pending" },
+  { id: "al6", timestamp: "2026-07-27T09:00:00Z", actorId: "u3", actorName: "Carlos Mendez", action: "status_changed", entityType: "job", entityId: "j1", entityLabel: "Sub-Zero Refrigerator – Cooling Issue", before: "scheduled", after: "in_progress" },
+  { id: "al7", timestamp: "2026-07-27T08:00:00Z", actorId: "u4", actorName: "Jasmine Patel", action: "status_changed", entityType: "job", entityId: "j5", entityLabel: "Thermador Oven – Calibration & Maintenance", before: "in_progress", after: "completed" },
+  { id: "al8", timestamp: "2026-07-26T14:00:00Z", actorId: "u5", actorName: "Derek Thompson", action: "submitted", entityType: "approval", entityId: "ap5", entityLabel: "Part order – Sub-Zero wine cooler thermostat (7021186)", before: "draft", after: "pending" },
+  { id: "al9", timestamp: "2026-07-25T16:00:00Z", actorId: "u1", actorName: "Michael Reeves", action: "updated", entityType: "pricing", entityId: "pricing_config", entityLabel: "Pricing: Labor Rate per Hour", before: "$175/hr", after: "$185/hr" },
+  { id: "al10", timestamp: "2026-07-24T10:00:00Z", actorId: "u2", actorName: "Sandra Kim", action: "created", entityType: "job", entityId: "j8", entityLabel: "Wolf Range – Deep Clean & Burner Service", notes: "Scheduled per VIP service contract for Catherine Voss." },
+];
+
+// ─── Phase 2: Review Packets ──────────────────────────────────────────────────
+export const REVIEW_PACKETS: ReviewPacket[] = [
+  {
+    approvalId: "ap1",
+    jobId: "j1",
+    symptoms: {
+      customerComplaint: "Fridge won't get cold. Everything is warm and the ice maker stopped working two days ago. We have a dinner party this weekend.",
+      observedSymptoms: ["Not cooling", "Ice maker not working", "Warm fresh food section", "No airflow from vents"],
+      errorCodes: [],
+      frequencyOfIssue: "Constant – ongoing for 3 days",
+      additionalNotes: "Ambient room temp is 72°F. Compressor hum audible from rear. No frost visible on exterior.",
+    },
+    diagnostic: {
+      confirmedDiagnosis: "Evaporator fan motor failure — voltage present at motor terminals (115V), motor not spinning. No airflow to fresh food section.",
+      suspectedDiagnoses: [
+        { diagnosis: "Evaporator fan motor failure", confidence: 88, status: "confirmed" },
+        { diagnosis: "Defrost system failure", confidence: 30, status: "ruled_out" },
+      ],
+      completedTests: ["Evaporator Fan Voltage Test", "Evaporator Fan Motor Resistance Test", "Defrost Heater Resistance Test"],
+      techNotes: "Voltage test: 115.2V AC at motor terminals — board output is good. Motor resistance: OL (open winding) — motor is failed. Defrost heater: 18Ω — within spec, not the primary cause. Recommend replacing fan motor immediately. Defrost system OK.",
+    },
+    readings: [
+      { component: "Evaporator Fan Motor", type: "voltage", expectedValue: "115V AC", measuredValue: "115.2", unit: "VAC", result: "pass" },
+      { component: "Evaporator Fan Motor Winding", type: "resistance", expectedValue: "200–400Ω", measuredValue: "OL", unit: "Ω", result: "fail" },
+      { component: "Defrost Heater", type: "resistance", expectedValue: "15–30Ω", measuredValue: "18.4", unit: "Ω", result: "pass" },
+      { component: "Freezer Compartment", type: "temperature", expectedValue: "0°F", measuredValue: "38", unit: "°F", result: "fail" },
+      { component: "Fresh Food Compartment", type: "temperature", expectedValue: "37°F", measuredValue: "52", unit: "°F", result: "fail" },
+    ],
+    photos: [
+      { id: "ph1", category: "before", caption: "Evaporator coils — minimal frost buildup, consistent with airflow failure", timestamp: "2026-07-27T09:45:00Z" },
+      { id: "ph2", category: "defect", caption: "Fan motor — seized, winding OL confirmed on meter", timestamp: "2026-07-27T09:52:00Z" },
+      { id: "ph3", category: "meter_reading", caption: "Meter showing OL on motor winding resistance test", timestamp: "2026-07-27T09:55:00Z" },
+      { id: "ph4", category: "serial_number", caption: "Unit serial plate — SZ-PRO48-221047", timestamp: "2026-07-27T09:30:00Z" },
+    ],
+    serviceReport: {
+      repairType: "parts_replaced",
+      workPerformed: "Diagnosed evaporator fan motor failure via voltage test (115V confirmed at terminals) and resistance test (motor winding OL). Removed rear freezer panel per Sub-Zero service manual Section 7. Confirmed motor seizure. Defrost heater tested and confirmed within spec (18.4Ω). Estimate submitted for manager approval before ordering parts.",
+      partsReplaced: [],
+      laborMinutes: 95,
+      outcome: "Diagnosis complete. Fan motor 4204490 required. Awaiting approval to order and complete repair.",
+      followUpRequired: true,
+      safetyConcerns: "R-134a system intact — no leak detected at this time. EPA 608 precautions maintained.",
+    },
+    estimateLines: [
+      { type: "labor", description: "Diagnostic + Fan Motor Replacement (3 hrs @ $185/hr)", quantity: 3, unitPrice: 185 },
+      { type: "part", description: "Sub-Zero Evaporator Fan Motor Assembly (4204490)", quantity: 1, unitPrice: 320 },
+      { type: "part", description: "Compressor Start Relay (4211614) — preventive replacement", quantity: 1, unitPrice: 48 },
+      { type: "part", description: "Refrigerant R-134a 1 lb (precautionary)", quantity: 2, unitPrice: 35 },
+    ],
+    estimateTotal: 993,
+    proposedHcpChanges: [
+      { field: "Job Status", currentValue: "In Progress", proposedValue: "Awaiting Parts", reason: "Fan motor must be ordered; cannot complete repair until part arrives" },
+      { field: "Diagnosis", currentValue: "(blank)", proposedValue: "Evaporator fan motor failure — winding OL, voltage supply confirmed normal", reason: "Document confirmed diagnosis in HCP job record" },
+      { field: "Next Appointment", currentValue: "(none)", proposedValue: "Schedule return visit after part delivery (est. same day — in stock)", reason: "Part 4204490 is in stock; return visit can be scheduled for next day" },
+    ],
+  },
+  {
+    approvalId: "ap2",
+    jobId: "j3",
+    symptoms: {
+      customerComplaint: "Dishwasher shows E62 and stops mid-cycle. The dishes come out wet and dirty. Started every other cycle, now every cycle.",
+      observedSymptoms: ["E62 error code", "Dishes wet and cold", "Cycle stops mid-wash", "No heated water"],
+      errorCodes: ["E62"],
+      frequencyOfIssue: "Every cycle — 100% failure rate",
+      additionalNotes: "E62 confirmed on both Quick-Wash and Normal cycles. Customer has not changed detergent or load patterns.",
+    },
+    diagnostic: {
+      confirmedDiagnosis: "Heating element failure (E62 confirmed). Element measures OL — open circuit. Water inlet valve also showing reduced flow (pressure test low). Both components require replacement.",
+      suspectedDiagnoses: [
+        { diagnosis: "Heating element failure", confidence: 92, status: "confirmed" },
+        { diagnosis: "Water inlet valve reduced flow", confidence: 75, status: "confirmed" },
+        { diagnosis: "NTC temperature sensor", confidence: 20, status: "ruled_out" },
+      ],
+      completedTests: ["Heating Element Resistance Test", "NTC Temperature Sensor Test", "Inlet Water Temperature Check"],
+      techNotes: "Element resistance: OL — confirmed failed. NTC: 9.8kΩ at 70°F — within spec, not the fault. Inlet water temp: 121°F — adequate. However, water fill volume appeared low during cycle observation; inlet valve screen partially blocked with debris. Both heating element and inlet valve replacement recommended.",
+    },
+    readings: [
+      { component: "Heating Element", type: "resistance", expectedValue: "15–25Ω", measuredValue: "OL", unit: "Ω", result: "fail" },
+      { component: "NTC Temperature Sensor", type: "resistance", expectedValue: "~10kΩ", measuredValue: "9.8", unit: "kΩ", result: "pass" },
+      { component: "Supply Voltage", type: "voltage", expectedValue: "120V AC", measuredValue: "119.4", unit: "VAC", result: "pass" },
+    ],
+    photos: [
+      { id: "ph5", category: "defect", caption: "Heating element — visually intact but OL on resistance test", timestamp: "2026-07-27T11:20:00Z" },
+      { id: "ph6", category: "meter_reading", caption: "Multimeter showing OL on heating element", timestamp: "2026-07-27T11:25:00Z" },
+      { id: "ph7", category: "before", caption: "Interior base — water pooling, inlet flow restricted", timestamp: "2026-07-27T11:10:00Z" },
+    ],
+    serviceReport: {
+      repairType: "parts_replaced",
+      workPerformed: "E62 error code confirmed. Disconnected power at breaker. Accessed heating element via lower kick panel. Resistance test confirmed element OL — failed. NTC sensor tested 9.8kΩ (in spec). Inlet water temperature 121°F (adequate). Observed reduced inlet flow during live cycle; inlet valve screen blocked. Both components require replacement. Estimate submitted for approval.",
+      partsReplaced: [],
+      laborMinutes: 75,
+      outcome: "Diagnosis confirmed. Parts ordered pending approval. Unit not operational — customer advised.",
+      followUpRequired: true,
+      safetyConcerns: "240V circuit — power confirmed off before all internal testing.",
+    },
+    estimateLines: [
+      { type: "labor", description: "Diagnostic + Heating Element + Inlet Valve Replacement (2 hrs @ $185/hr)", quantity: 2, unitPrice: 185 },
+      { type: "part", description: "Miele Heating Element 120V — 10289840", quantity: 1, unitPrice: 210 },
+      { type: "part", description: "Water Inlet Valve Assembly — 07119570", quantity: 1, unitPrice: 95 },
+    ],
+    estimateTotal: 675,
+    proposedHcpChanges: [
+      { field: "Diagnosis", currentValue: "Heating element failed. Water inlet valve also shows reduced flow.", proposedValue: "E62 confirmed — heating element OL (failed). Inlet valve flow restricted (partially blocked screen). Both replaced.", reason: "Update with confirmed test results and both components replaced" },
+      { field: "Parts Status", currentValue: "(blank)", proposedValue: "Miele 10289840 + 07119570 on order — 2–3 business day lead time", reason: "Inform dispatch of parts lead time for scheduling return visit" },
+    ],
+  },
+  {
+    approvalId: "ap3",
+    jobId: "j6",
+    symptoms: {
+      customerComplaint: "Left front burner completely dead. Shows F1 on display. Other zones work fine.",
+      observedSymptoms: ["F1 fault code", "Front-left induction zone dead", "No heat output", "Error persists after restart"],
+      errorCodes: ["F1"],
+      frequencyOfIssue: "Constant — zone non-functional since fault appeared",
+      additionalNotes: "Customer reports fault appeared suddenly. No unusual noise or burning smell reported.",
+    },
+    diagnostic: {
+      confirmedDiagnosis: "Front-left induction zone PCB module failure. F1 fault indicates power module fault on that zone. PCB module 11021752 requires emergency replacement.",
+      suspectedDiagnoses: [
+        { diagnosis: "Induction zone PCB module failure", confidence: 90, status: "confirmed" },
+        { diagnosis: "Safety thermostat failure", confidence: 15, status: "ruled_out" },
+      ],
+      completedTests: ["Induction Zone Supply Voltage Test", "Induction Coil Resistance Test"],
+      techNotes: "Supply voltage at terminal block: 240V confirmed. Safety thermostat continuity: intact. Induction coil resistance (FL zone): OL — coil open circuit consistent with PCB module internal failure. F1 on Gaggenau VG 295 = power module fault for affected zone. Emergency part order required — part availability order_1_week (special order scenario). Customer advised unit partially operable on 3 remaining zones.",
+    },
+    readings: [
+      { component: "Induction Zone Supply Voltage", type: "voltage", expectedValue: "240V AC", measuredValue: "241.2", unit: "VAC", result: "pass" },
+      { component: "Induction Coil Resistance (FL zone)", type: "resistance", expectedValue: "1–5Ω", measuredValue: "OL", unit: "Ω", result: "fail" },
+    ],
+    photos: [
+      { id: "ph8", category: "defect", caption: "Front-left zone — F1 fault displayed, zone inactive", timestamp: "2026-07-27T08:10:00Z" },
+      { id: "ph9", category: "meter_reading", caption: "Coil resistance test showing OL on FL zone", timestamp: "2026-07-27T08:15:00Z" },
+    ],
+    serviceReport: {
+      repairType: "parts_replaced",
+      workPerformed: "F1 fault confirmed on front-left induction zone. Supply voltage tested at 241.2V — adequate. Safety thermostat continuity intact. Induction coil resistance (FL zone): OL — confirms PCB module internal failure. Emergency part order 11021752 submitted. Customer informed 3 remaining zones fully operational.",
+      partsReplaced: [],
+      laborMinutes: 55,
+      outcome: "Diagnosis confirmed. Emergency part order pending approval. Unit partially operational.",
+      followUpRequired: true,
+    },
+    estimateLines: [
+      { type: "labor", description: "Diagnostic labor (1 hr @ $185/hr)", quantity: 1, unitPrice: 185 },
+      { type: "part", description: "Gaggenau Induction Zone PCB Module FL — 11021752 (emergency order)", quantity: 1, unitPrice: 480 },
+    ],
+    estimateTotal: 480,
+    proposedHcpChanges: [
+      { field: "Job Status", currentValue: "En Route", proposedValue: "Awaiting Parts", reason: "PCB module 11021752 on emergency order — 1 week lead time" },
+      { field: "Diagnosis", currentValue: "(blank)", proposedValue: "F1 fault — front-left PCB module coil OL. Module 11021752 required.", reason: "Document confirmed diagnosis" },
+    ],
+  },
+];
+
+// ─── Phase 2: Pricing Config ───────────────────────────────────────────────────
+export const INITIAL_PRICING_CONFIG: PricingConfig = {
+  laborRatePerHour: 185,
+  diagnosticFee: 125,
+  travelFeeStandard: 45,
+  travelFeePremium: 65,
+  minimumServiceCharge: 185,
+  afterHoursSurchargePercent: 25,
+  tierMultipliers: { standard: 1.0, premium: 1.1, vip: 1.2 },
+  taxRatePercent: 10.25,
+  warrantyLaborRate: 95,
+  updatedAt: "2026-07-25T16:00:00Z",
+  updatedBy: "Michael Reeves",
+};
+
+// ─── Phase 2: Integrations ─────────────────────────────────────────────────────
+export const INITIAL_INTEGRATIONS: IntegrationConfig[] = [
+  {
+    id: "int_hcp",
+    name: "Housecall Pro",
+    description: "Field service management — jobs, dispatch, invoicing, and customer portal.",
+    category: "field_service",
+    status: "disconnected",
+    logoInitials: "HCP",
+    logoColor: "bg-blue-600",
+    features: ["Two-way job sync", "Invoice generation", "Customer notifications", "Dispatch board", "GPS tracking"],
+    configFields: [
+      { key: "api_key", label: "API Key", placeholder: "hcp_live_xxxxxxxxxxxxxxxx", masked: true },
+      { key: "company_id", label: "Company ID", placeholder: "your-company-id" },
+      { key: "webhook_url", label: "Webhook URL", placeholder: "https://yourapp.com/webhooks/hcp" },
+    ],
+    notes: "Connect your Housecall Pro account to sync jobs, estimates, and invoices automatically.",
+  },
+  {
+    id: "int_stripe",
+    name: "Stripe",
+    description: "Payment processing — accept cards, ACH, and digital wallets on estimates and invoices.",
+    category: "payments",
+    status: "disconnected",
+    logoInitials: "STR",
+    logoColor: "bg-violet-600",
+    features: ["Card & ACH payments", "Digital invoices", "Automatic receipts", "Refund management", "Revenue reporting"],
+    configFields: [
+      { key: "publishable_key", label: "Publishable Key", placeholder: "pk_live_xxxxxxxx" },
+      { key: "secret_key", label: "Secret Key", placeholder: "sk_live_xxxxxxxx", masked: true },
+      { key: "webhook_secret", label: "Webhook Secret", placeholder: "whsec_xxxxxxxx", masked: true },
+    ],
+  },
+  {
+    id: "int_openai",
+    name: "OpenAI",
+    description: "AI-powered diagnostic suggestions, report drafting, and customer communication.",
+    category: "ai",
+    status: "disconnected",
+    logoInitials: "AI",
+    logoColor: "bg-emerald-600",
+    features: ["Diagnostic AI assistant", "Report auto-drafting", "Customer message drafting", "Knowledge base search"],
+    configFields: [
+      { key: "api_key", label: "API Key", placeholder: "sk-proj-xxxxxxxx", masked: true },
+      { key: "model", label: "Model", placeholder: "gpt-4o" },
+    ],
+    notes: "Enables AI diagnostic assistant and auto-draft features for service reports.",
+  },
+  {
+    id: "int_twilio",
+    name: "Twilio",
+    description: "SMS and voice notifications — appointment reminders, tech ETA alerts, and approval requests.",
+    category: "communications",
+    status: "disconnected",
+    logoInitials: "TWL",
+    logoColor: "bg-red-600",
+    features: ["SMS appointment reminders", "Tech ETA notifications", "Manager approval alerts", "Two-way SMS"],
+    configFields: [
+      { key: "account_sid", label: "Account SID", placeholder: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" },
+      { key: "auth_token", label: "Auth Token", placeholder: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", masked: true },
+      { key: "from_number", label: "From Number", placeholder: "+13105550100" },
+    ],
+  },
+  {
+    id: "int_miele",
+    name: "Miele Warranty Portal",
+    description: "Direct warranty claim submission and status tracking with Miele Professional.",
+    category: "warranty",
+    status: "pending",
+    logoInitials: "MWP",
+    logoColor: "bg-gray-700",
+    features: ["Online warranty claim submission", "Claim status tracking", "Parts pre-authorization", "Labor rate confirmation"],
+    configFields: [
+      { key: "dealer_id", label: "Dealer ID", placeholder: "JDR-LUXURY-001" },
+      { key: "portal_username", label: "Portal Username", placeholder: "your@email.com" },
+      { key: "portal_password", label: "Portal Password", placeholder: "••••••••", masked: true },
+    ],
+    notes: "Registration pending Miele dealer approval. Expected activation within 5–7 business days.",
+    lastSynced: undefined,
+  },
+];
+
+// ─── Phase 2: Helper Functions ─────────────────────────────────────────────────
+export const getReviewPacket = (approvalId: string): ReviewPacket | undefined =>
+  REVIEW_PACKETS.find(rp => rp.approvalId === approvalId);
